@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Thought Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            /* Gradient background: light green -> light green -> light grey -> light green -> light green */
+            background: linear-gradient(to bottom, #ffffff, #ebf5f1, #c0e2d9, #d1f1f1, rgb(214, 233, 227));
+            background-attachment: fixed; /* Ensures gradient covers full viewport even on scroll */
+        }
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e0e0e0;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #a0a0a0;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #808080;
+        }
+        /* Ensure the focus scale lists can scroll if content exceeds max-height */
+        .focus-list-container {
+            max-height: 300px; /* Increased max-height for more content visibility */
+            overflow-y: auto;
+            padding-right: 4px; /* Small padding to prevent scrollbar from touching content */
+        }
+        /* Custom styling for thought cards within focus scale */
+        .focus-list-item {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .focus-list-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Styles for mobile "Add Thought" button */
+        /* Always sticky to top on mobile */
+        .add-thought-mobile-btn {
+            position: sticky;
+            top: 0;
+            z-index: 1000; /* Ensure it's above other content */
+            width: 100%; /* Full width */
+            padding: 1rem 1rem; /* Adjust padding as needed */
+            background-color: #3B82F6; /* Tailwind blue-600 */
+            color: white;
+            font-weight: 600; /* font-semibold */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+            /* IMPORTANT: Hidden by default on desktop, shown only on mobile by media query */
+            display: none; /* Changed from initial 'display:flex' to 'display:none' */
+            justify-content: center; /* These are still needed when it IS displayed (on mobile) */
+            align-items: center;    /* These are still needed when it IS displayed (on mobile) */
+            border-radius: 0; /* Make it a full bar */
+            cursor: pointer; /* Indicate it's clickable */
+            transition: background-color 0.2s ease-in-out;
+        }
+        .add-thought-mobile-btn:hover {
+            background-color: #2563EB; /* Tailwind blue-700 */
+        }
+        .add-thought-mobile-btn:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px #BFDBFE, 0 0 0 4px #60A5FA; /* Tailwind ring-blue-500 ring-offset-2 */
+        }
+
+        /* Media query to show "Add Thought" button on screens smaller than large (lg) */
+        @media (max-width: 1023px) { /* Corresponds to Tailwind's lg breakpoint */
+            .add-thought-mobile-btn {
+                display: flex; /* Show the button on mobile (using flex for centering) */
+            }
+            /* Initially hide the capture thought div on mobile */
+            .capture-thought-mobile-hidden {
+                display: none;
+            }
+            /* Adjust body padding top to account for the sticky header on mobile */
+            body {
+                padding-top: 56px; /* Approx height of the sticky button */
+            }
+        }
+        /* Hide the top heading section on mobile when the add thought button is present */
+        @media (max-width: 1023px) {
+            .top-heading-mobile-hide {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col p-0 md:p-8">
+
+    <div class="text-center mb-8 top-heading-mobile-hide lg:block">
+        <p class="text-xl font-semibold text-green-800 mb-2">ThinkFocus</p>
+        <h1 class="text-5xl font-bold text-gray-800">My Thought Manager</h1>
+    </div>
+
+    <button id="addThoughtMobileBtn"
+            class="add-thought-mobile-btn">
+        Add Thought
+    </button>
+
+    <div class="w-full lg:max-w-screen-lg lg:mx-auto flex flex-col lg:flex-row gap-8 bg-white shadow-xl rounded-2xl px-0 py-8 md:p-8 lg:p-10">
+
+        <div id="captureThoughtContainer"
+             class="lg:w-2/5 order-1 lg:order-2 lg:sticky lg:top-8 lg:self-start capture-thought-mobile-hidden w-full">
+            <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-200 mb-8">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-6">Capture Your Thought</h2>
+                <textarea id="thoughtInput"
+                          class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-200 resize-y min-h-[120px] text-lg"
+                          placeholder="Write your thought here... (e.g., 'I'm worried about the presentation tomorrow', 'Idea for a new project', 'Need to buy groceries')"></textarea>
+
+                <div class="mt-6 flex flex-col items-stretch gap-4">
+                    <select id="tagSelect"
+                            class="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-700 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-200 text-lg">
+                        <option value="">Select a Tag</option>
+                        <option value="Anxiety">Anxiety</option>
+                        <option value="Guilt/Regret">Guilt/Regret</option>
+                        <option value="Illogical/Irrelevant">Illogical/Irrelevant</option>
+                        <option value="Ideas">Ideas</option>
+                        <option value="Plan">Plan</option>
+                        <option value="Motivation">Motivation</option>
+                        <option value="Important Task">Important Task</option>
+                        <option value="Less Priority Tasks">Less Priority Tasks</option>
+                    </select> 
+                    <button id="saveThoughtBtn"
+                            class="mt-4 w-full px-6 py-3 bg-green-600 text-white font-semibold rounded-xl shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200 text-lg">
+                        Save Thought
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:w-3/5 bg-gray-50 p-8 rounded-xl shadow-lg flex flex-col gap-6 border border-gray-200 order-2 lg:order-1 w-full">
+            <h2 class="text-3xl font-semibold text-gray-800 mb-4 text-center">Focus Scale</h2>
+
+            <div class="bg-green-50 border-l-4 border-green-500 p-5 rounded-lg shadow-sm">
+                <h3 class="text-xl font-bold text-green-700 mb-2">High Focus</h3>
+                <p class="text-sm text-green-600 mb-2">Thoughts that need your immediate attention.</p>
+                <div class="focus-list-container mt-4">
+                    <ul id="highFocusList" class="list-none pl-0 space-y-3 text-green-800">
+                        </ul>
+                </div>
+            </div>
+
+            <div class="bg-orange-50 border-l-4 border-orange-500 p-5 rounded-lg shadow-sm">
+                <h3 class="text-xl font-bold text-orange-700 mb-2">Low Focus</h3>
+                <p class="text-sm text-orange-600 mb-2">Thoughts to consider, but not urgent.</p>
+                <div class="focus-list-container mt-4">
+                    <ul id="lowFocusList" class="list-none pl-0 space-y-3 text-orange-800">
+                        </ul>
+                </div>
+            </div>
+
+            <div class="bg-red-50 border-l-4 border-red-500 p-5 rounded-lg shadow-sm">
+                <h3 class="text-xl font-bold text-red-700 mb-2">Ignore</h3>
+                <p class="text-sm text-red-600 mb-2">Thoughts to acknowledge, then let go.</p>
+                <div class="focus-list-container mt-4">
+                    <ul id="ignoreList" class="list-none pl-0 space-y-3 text-red-800">
+                        </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // IndexedDB constants
+        const DB_NAME = 'ThoughtManagerDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'thoughts';
+        const MAX_THOUGHTS_PER_SCALE_CATEGORY = 10; // Maximum thoughts to display in focus scale
+
+        let db;
+
+        /**
+         * Opens the IndexedDB database. If it doesn't exist, it creates it and the object store.
+         * @returns {Promise<IDBDatabase>} A promise that resolves with the database instance.
+         */
+        function openDatabase() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onupgradeneeded = (event) => {
+                    // This event is fired when the database is created or when its version is upgraded.
+                    db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        // Create an object store to hold information about thoughts.
+                        // We'll use 'id' as the key path, and autoIncrement will generate unique IDs.
+                        db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                    }
+                };
+
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    console.log('IndexedDB opened successfully');
+                    resolve(db);
+                };
+
+                request.onerror = (event) => {
+                    console.error('IndexedDB error:', event.target.errorCode);
+                    reject(event.target.errorCode);
+                };
+            });
+        }
+
+        /**
+         * Adds a new thought to the IndexedDB.
+         * @param {string} text The thought text.
+         * @param {string} tag The selected tag for the thought.
+         * @returns {Promise<void>} A promise that resolves when the thought is added.
+         */
+        function addThought(text, tag) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const thought = {
+                    text: text,
+                    tag: tag,
+                    timestamp: new Date().toISOString() // Store timestamp for sorting if needed
+                };
+                const request = store.add(thought);
+
+                request.onsuccess = () => {
+                    console.log('Thought added:', thought);
+                    resolve();
+                };
+
+                request.onerror = (event) => {
+                    console.error('Error adding thought:', event.target.errorCode);
+                    reject(event.target.errorCode);
+                };
+            });
+        }
+
+        /**
+         * Retrieves all thoughts from the IndexedDB.
+         * @returns {Promise<Array<Object>>} A promise that resolves with an array of thoughts.
+         */
+        function getThoughts() {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.getAll();
+
+                request.onsuccess = () => {
+                    // Sort thoughts by timestamp in descending order (most recent first)
+                    const thoughts = request.result.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                    resolve(thoughts);
+                };
+
+                request.onerror = (event) => {
+                    console.error('Error getting thoughts:', event.target.errorCode);
+                    reject(event.target.errorCode);
+                };
+            });
+        }
+
+        /**
+         * Deletes a thought from IndexedDB by its ID.
+         * @param {number} id The ID of the thought to delete.
+         * @returns {Promise<void>} A promise that resolves when the thought is deleted.
+         */
+        function deleteThought(id) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.delete(id);
+
+                request.onsuccess = () => {
+                    console.log('Thought deleted:', id);
+                    resolve();
+                };
+
+                request.onerror = (event) => {
+                    console.error('Error deleting thought:', event.target.errorCode);
+                    reject(event.target.errorCode);
+                };
+            });
+        }
+
+        /**
+         * Renders all thoughts into their respective focus scale lists.
+         * @param {Array<Object>} thoughts The array of thoughts to render.
+         */
+        function renderThoughts(thoughts) {
+            const highFocusList = document.getElementById('highFocusList');
+            const lowFocusList = document.getElementById('lowFocusList');
+            const ignoreList = document.getElementById('ignoreList');
+
+            // Clear existing focus scale lists
+            highFocusList.innerHTML = '';
+            lowFocusList.innerHTML = '';
+            ignoreList.innerHTML = '';
+
+            // Filter and slice thoughts for each focus category
+            const highFocusThoughts = thoughts.filter(t => t.tag === 'Important Task').slice(0, MAX_THOUGHTS_PER_SCALE_CATEGORY);
+            const lowFocusThoughts = thoughts.filter(t => ['Less Priority Tasks', 'Ideas', 'Plan', 'Motivation'].includes(t.tag)).slice(0, MAX_THOUGHTS_PER_SCALE_CATEGORY);
+            const ignoreThoughts = thoughts.filter(t => ['Anxiety', 'Guilt/Regret', 'Illogical/Irrelevant'].includes(t.tag)).slice(0, MAX_THOUGHTS_PER_SCALE_CATEGORY);
+
+            // Helper function to create a list item for the focus scale
+            const createFocusScaleListItem = (thought) => {
+                const li = document.createElement('li');
+                // Updated classes for professional, minimalistic look
+                li.className = 'focus-list-item flex flex-col p-3 px-5 bg-white rounded-lg shadow-sm border border-gray-100';
+                li.innerHTML = `
+                    <div class="flex justify-between items-center w-full mb-2">
+                        <span class="text-sm font-medium text-gray-500 tracking-wide">${thought.tag}</span>
+                        <button data-id="${thought.id}" class="delete-focus-btn text-gray-400 hover:text-red-500 text-2xl transition-colors duration-200" title="Delete thought">
+                            &times;
+                        </button>
+                    </div>
+                    <p class="text-base text-gray-800 leading-relaxed">${thought.text}</p>
+                `;
+                return li;
+            };
+
+            highFocusThoughts.forEach(thought => {
+                highFocusList.appendChild(createFocusScaleListItem(thought));
+            });
+
+            lowFocusThoughts.forEach(thought => {
+                lowFocusList.appendChild(createFocusScaleListItem(thought));
+            });
+
+            ignoreThoughts.forEach(thought => {
+                ignoreList.appendChild(createFocusScaleListItem(thought));
+            });
+
+
+            // Add event listeners for delete buttons on focus scale cards
+            document.querySelectorAll('.delete-focus-btn').forEach(button => {
+                button.addEventListener('click', async (event) => {
+                    const idToDelete = parseInt(event.target.dataset.id);
+                    await deleteThought(idToDelete);
+                    const updatedThoughts = await getThoughts();
+                    renderThoughts(updatedThoughts);
+                });
+            });
+        }
+
+        // DOM elements
+        const addThoughtMobileBtn = document.getElementById('addThoughtMobileBtn');
+        const captureThoughtContainer = document.getElementById('captureThoughtContainer');
+        const saveThoughtBtn = document.getElementById('saveThoughtBtn');
+        const thoughtInput = document.getElementById('thoughtInput');
+        const tagSelect = document.getElementById('tagSelect');
+        const topHeadingSection = document.querySelector('.top-heading-mobile-hide'); // Reference to the top heading
+
+        // Function to toggle the capture thought section visibility (accordion behavior)
+        function toggleCaptureThoughtSection() {
+            // Only perform toggle on mobile screens
+            if (window.innerWidth < 1024) {
+                captureThoughtContainer.classList.toggle('capture-thought-mobile-hidden');
+                // Scroll to the very top of the page when the form opens
+                if (!captureThoughtContainer.classList.contains('capture-thought-mobile-hidden')) {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            }
+        }
+
+        // Event listener for the mobile "Add Thought" button (accordion toggle)
+        if (addThoughtMobileBtn) {
+            addThoughtMobileBtn.addEventListener('click', () => {
+                toggleCaptureThoughtSection();
+            });
+        }
+
+        // Event listener for the Save Thought button
+        saveThoughtBtn.addEventListener('click', async () => {
+            const thoughtText = thoughtInput.value.trim();
+            const selectedTag = tagSelect.value;
+
+            if (thoughtText === '') {
+                alert('Please enter your thought.');
+                return;
+            }
+            if (selectedTag === '') {
+                alert('Please select a tag for your thought.');
+                return;
+            }
+
+            try {
+                await addThought(thoughtText, selectedTag);
+                thoughtInput.value = ''; // Clear input field
+                tagSelect.value = ''; // Reset tag selection
+                const updatedThoughts = await getThoughts();
+                renderThoughts(updatedThoughts);
+
+                // After submitting, the form should remain de-collapsed (visible) on mobile
+                if (window.innerWidth < 1024) { // Check if it's a mobile view
+                    captureThoughtContainer.classList.remove('capture-thought-mobile-hidden'); // Ensure it's visible
+                    window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top to show it
+                }
+
+            } catch (error) {
+                console.error('Error saving thought:', error);
+                alert('Failed to save thought. Please try again.');
+            }
+        });
+
+        // Initialize the database and render thoughts on page load
+        window.onload = async () => {
+            try {
+                await openDatabase();
+                const initialThoughts = await getThoughts();
+                renderThoughts(initialThoughts);
+
+                // Adjust initial visibility based on screen size
+                if (window.innerWidth < 1024) { // Mobile view
+                    captureThoughtContainer.classList.add('capture-thought-mobile-hidden'); // Collapsed by default
+                    // No need to set display: flex here as CSS handles it for mobile
+                    if (topHeadingSection) {
+                        topHeadingSection.style.display = 'none'; // Top heading hidden on mobile
+                    }
+                } else { // Desktop view
+                    // No need to set display: none for button as CSS handles it for desktop
+                    captureThoughtContainer.classList.remove('capture-thought-mobile-hidden'); // Always visible
+                    if (topHeadingSection) {
+                        topHeadingSection.style.display = 'block'; // Top heading visible on desktop
+                    }
+                }
+
+            } catch (error) {
+                console.error('Failed to initialize app:', error);
+                // Optionally display a user-friendly error message
+            }
+        };
+
+        // Adjust visibility on window resize (e.g., rotating tablet)
+        window.addEventListener('resize', () => {
+            if (window.innerWidth < 1024) { // Mobile view
+                captureThoughtContainer.classList.add('capture-thought-mobile-hidden'); // Collapsed by default
+                // No need to set display: flex for button as CSS handles it for mobile
+                if (topHeadingSection) {
+                    topHeadingSection.style.display = 'none'; // Top heading hidden on mobile
+                }
+            } else { // Desktop view
+                // No need to set display: none for button as CSS handles it for desktop
+                captureThoughtContainer.classList.remove('capture-thought-mobile-hidden'); // Always visible
+                if (topHeadingSection) {
+                    topHeadingSection.style.display = 'block'; // Top heading visible on desktop
+                }
+            }
+        });
+
+        // No need for scroll event listener for sticky behavior, as 'position: sticky; top: 0;' handles it automatically.
+    </script>
+</body>
+</html>
