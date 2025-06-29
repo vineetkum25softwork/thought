@@ -44,24 +44,20 @@
         }
 
         /* Styles for mobile "Add Thought" button */
-        /* Always sticky to top on mobile */
         .add-thought-mobile-btn {
-            position: sticky;
-            top: 0;
-            z-index: 1000; /* Ensure it's above other content */
             width: 100%; /* Full width */
             padding: 1rem 1rem; /* Adjust padding as needed */
             background-color: #3B82F6; /* Tailwind blue-600 */
             color: white;
             font-weight: 600; /* font-semibold */
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-            /* IMPORTANT: Hidden by default on desktop, shown only on mobile by media query */
-            display: none; /* Changed from initial 'display:flex' to 'display:none' */
-            justify-content: center; /* These are still needed when it IS displayed (on mobile) */
-            align-items: center;    /* These are still needed when it IS displayed (on mobile) */
+            display: none; /* Hidden by default, shown on mobile by media query */
+            justify-content: center;
+            align-items: center;
             border-radius: 0; /* Make it a full bar */
-            cursor: pointer; /* Indicate it's clickable */
+            cursor: pointer;
             transition: background-color 0.2s ease-in-out;
+            /* Removed sticky positioning for mobile */
         }
         .add-thought-mobile-btn:hover {
             background-color: #2563EB; /* Tailwind blue-700 */
@@ -71,31 +67,26 @@
             box-shadow: 0 0 0 2px #BFDBFE, 0 0 0 4px #60A5FA; /* Tailwind ring-blue-500 ring-offset-2 */
         }
 
-        /* Media query to show "Add Thought" button on screens smaller than large (lg) */
+        /* Media queries for mobile-specific adjustments */
         @media (max-width: 1023px) { /* Corresponds to Tailwind's lg breakpoint */
             .add-thought-mobile-btn {
-                display: flex; /* Show the button on mobile (using flex for centering) */
+                display: flex; /* Show the button on mobile */
             }
             /* Initially hide the capture thought div on mobile */
             .capture-thought-mobile-hidden {
                 display: none;
             }
-            /* Adjust body padding top to account for the sticky header on mobile */
+            /* Removed padding-top from body */
             body {
-                padding-top: 56px; /* Approx height of the sticky button */
+                padding-top: 0;
             }
-        }
-        /* Hide the top heading section on mobile when the add thought button is present */
-        @media (max-width: 1023px) {
-            .top-heading-mobile-hide {
-                display: none;
-            }
+            /* .top-heading-mobile-hide is now visible by default on mobile */
         }
     </style>
 </head>
 <body class="min-h-screen flex flex-col p-0 md:p-8">
 
-    <div class="text-center mb-8 top-heading-mobile-hide lg:block">
+    <div class="text-center mb-8 lg:block">
         <p class="text-xl font-semibold text-green-800 mb-2">ThinkFocus</p>
         <h1 class="text-5xl font-bold text-gray-800">My Thought Manager</h1>
     </div>
@@ -349,7 +340,7 @@
         const saveThoughtBtn = document.getElementById('saveThoughtBtn');
         const thoughtInput = document.getElementById('thoughtInput');
         const tagSelect = document.getElementById('tagSelect');
-        const topHeadingSection = document.querySelector('.top-heading-mobile-hide'); // Reference to the top heading
+        const topHeadingSection = document.querySelector('body > div:first-child'); // Reference to the top heading, assuming it's the first div in body
 
         // Function to toggle the capture thought section visibility (accordion behavior)
         function toggleCaptureThoughtSection() {
@@ -413,16 +404,8 @@
                 // Adjust initial visibility based on screen size
                 if (window.innerWidth < 1024) { // Mobile view
                     captureThoughtContainer.classList.add('capture-thought-mobile-hidden'); // Collapsed by default
-                    // No need to set display: flex here as CSS handles it for mobile
-                    if (topHeadingSection) {
-                        topHeadingSection.style.display = 'none'; // Top heading hidden on mobile
-                    }
                 } else { // Desktop view
-                    // No need to set display: none for button as CSS handles it for desktop
                     captureThoughtContainer.classList.remove('capture-thought-mobile-hidden'); // Always visible
-                    if (topHeadingSection) {
-                        topHeadingSection.style.display = 'block'; // Top heading visible on desktop
-                    }
                 }
 
             } catch (error) {
@@ -433,22 +416,12 @@
 
         // Adjust visibility on window resize (e.g., rotating tablet or virtual keyboard appearing)
         window.addEventListener('resize', () => {
-            if (window.innerWidth < 1024) { // Mobile view
-                // On mobile resize, we only manage the heading visibility.
-                // The captureThoughtContainer visibility is managed by button clicks and save events.
-                if (topHeadingSection) {
-                    topHeadingSection.style.display = 'none'; // Top heading hidden on mobile
-                }
-            } else { // Desktop view
-                // On desktop, always ensure captureThoughtContainer is visible.
+            if (window.innerWidth >= 1024) { // Desktop view
                 captureThoughtContainer.classList.remove('capture-thought-mobile-hidden'); // Always visible
-                if (topHeadingSection) {
-                    topHeadingSection.style.display = 'block'; // Top heading visible on desktop
-                }
             }
+            // Mobile view (innerWidth < 1024) now doesn't force captureThoughtContainer hidden on resize,
+            // and heading visibility is handled purely by CSS media queries.
         });
-
-        // No need for scroll event listener for sticky behavior, as 'position: sticky; top: 0;' handles it automatically.
     </script>
 </body>
 </html>
