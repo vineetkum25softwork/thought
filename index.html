@@ -5,155 +5,209 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Thought Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Using Inter font for a modern, clean look -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Roboto', sans-serif;
-            /* Gradient background: light green -> light green -> light grey -> light green -> light green */
-            background: linear-gradient(to bottom, #f9fdfc, #dbf1e9, #a7dbcc, #aed8c5, #d3e9d3);
-            background-attachment: fixed; /* Ensures gradient covers full viewport even on scroll */
+            font-family: 'Inter', sans-serif;
+            /* Professional gradient background: subtle green, blue, violet, pink */
+            background: linear-gradient(135deg, #e0f2f7, #e8f5e9, #f3e5f5, #fce4ec);
+            background-attachment: fixed;
+            min-height: 100vh; /* Ensure it covers the full viewport height */
         }
         /* Custom scrollbar for better aesthetics */
         ::-webkit-scrollbar {
             width: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #e0e0e0;
+            background: #f0f0f0;
             border-radius: 10px;
         }
         ::-webkit-scrollbar-thumb {
-            background: #a0a0a0;
+            background: #a7d9b5; /* Greenish thumb */
             border-radius: 10px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #808080;
+            background: #8ec39e;
         }
         /* Ensure the focus scale lists can scroll if content exceeds max-height */
         .focus-list-container {
-            max-height: 300px; /* Increased max-height for more content visibility */
+            max-height: 320px; /* Slightly increased max-height */
             overflow-y: auto;
-            padding-right: 4px; /* Small padding to prevent scrollbar from touching content */
+            padding-right: 8px; /* More padding for scrollbar */
         }
         /* Custom styling for thought cards within focus scale */
         .focus-list-item {
             transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            border-radius: 0.75rem; /* Rounded corners */
         }
         .focus-list-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+            transform: translateY(-3px); /* More pronounced lift */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08); /* Stronger shadow on hover */
         }
 
-        /* Styles for mobile "Add Thought" button */
+        /* Styles for mobile "Add Thought" button (default hidden for desktop) */
         .add-thought-mobile-btn {
-            width: 100%; /* Full width */
-            padding: 1rem 1rem; /* Adjust padding as needed */
-            background-color: #3B82F6; /* Tailwind blue-600 */
+            display: none; /* Hidden by default on desktop */
+            z-index: 1000;
             color: white;
-            font-weight: 600; /* font-semibold */
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-            display: none; /* Hidden by default, shown on mobile by media query */
-            justify-content: center;
-            align-items: center;
-            border-radius: 0; /* Make it a full bar */
+            font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.2s ease-in-out;
-            /* Removed sticky positioning for mobile */
+            transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
         }
         .add-thought-mobile-btn:hover {
-            background-color: #2563EB; /* Tailwind blue-700 */
+            background-color: #43A047; /* Darker green on hover */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
         }
         .add-thought-mobile-btn:focus {
             outline: none;
-            box-shadow: 0 0 0 2px #BFDBFE, 0 0 0 4px #60A5FA; /* Tailwind ring-blue-500 ring-offset-2 */
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.5), 0 0 0 6px rgba(76, 175, 80, 0.3); /* Green focus ring */
         }
 
-        /* Media queries for mobile-specific adjustments */
-        @media (max-width: 1023px) { /* Corresponds to Tailwind's lg breakpoint */
+        /* Media query to show "Add Thought" button on screens smaller than large (lg) */
+        @media (max-width: 1023px) {
             .add-thought-mobile-btn {
                 display: flex; /* Show the button on mobile */
+                position: sticky; /* Keep it sticky */
+                top: 10px; /* Position below the heading (approx) - Adjusted for shorter margin */
+                max-width: 280px; /* Fixed width for professionalism */
+                margin-left: auto; /* Center horizontally */
+                margin-right: auto;
+                padding: 0.75rem 1.5rem; /* Adjusted padding */
+                border-radius: 0.75rem; /* Rounded corners */
+                background-color: #4CAF50; /* Primary green */
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Keep shadow */
+                justify-content: center;
+                align-items: center;
             }
-            /* Initially hide the capture thought div on mobile */
             .capture-thought-mobile-hidden {
                 display: none;
             }
-            /* Removed padding-top from body */
+            /* Adjust body padding top to account for both the heading and the sticky button */
             body {
-                padding-top: 0;
+                padding-top: 140px; /* Adjusted to accommodate new button top position */
             }
-            /* .top-heading-mobile-hide is now visible by default on mobile */
+        }
+
+        /* Custom styling for buttons with a subtle gradient and shadow */
+        .btn-primary {
+            background: linear-gradient(to right, #4CAF50, #66BB6A); /* Green gradient */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(to right, #43A047, #5cb860);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+        }
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Custom styling for select/input focus */
+        .input-focus-style:focus {
+            outline: none;
+            border-color: #64B5F6; /* Light blue border */
+            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.3); /* Light blue ring */
+        }
+
+        /* Card background colors for focus scale categories - UPDATED COLORS */
+        .high-focus-card {
+            background-color: #e6ffe6; /* Very light green */
+            border-left-color: #28a745; /* Vibrant green */
+        }
+        .low-focus-card {
+            background-color: #fff3e0; /* Very light orange */
+            border-left-color: #fd7e14; /* Vibrant orange */
+        }
+        .ignore-card {
+            background-color: #ffe6e6; /* Very light red */
+            border-left-color: #dc3545; /* Standard red */
         }
     </style>
 </head>
 <body class="min-h-screen flex flex-col p-0 md:p-8">
-    <br>
-    <div class="text-center mb-8 lg:block">
-        <p class="text-xl font-semibold text-green-800 mb-2">ThinkFocus</p>
-        <h1 class="text-5xl font-bold text-gray-800">My Thought Manager</h1>
+
+    <!-- Top Heading Section - Now always visible -->
+    <div class="text-center mb-10 lg:block">
+        <p class="text-lg font-medium text-gray-600 mb-2">ThinkFocus</p>
+        <h1 class="text-4xl font-extrabold text-gray-900 leading-tight">My Thought Manager</h1>
     </div>
-    <br>
+
+    <!-- Mobile "Add Thought" Button (Sticky on top, but below heading on mobile) -->
     <button id="addThoughtMobileBtn"
             class="add-thought-mobile-btn">
-        Add Thought
+        + Add New Thought
     </button>
 
-    <div class="w-full lg:max-w-screen-lg lg:mx-auto flex flex-col lg:flex-row gap-8 bg-white shadow-xl rounded-2xl px-0 py-8 md:p-8 lg:p-10">
+    <!-- Main Content Container -->
+    <div class="w-full lg:max-w-screen-xl lg:mx-auto flex flex-col lg:flex-row gap-8 bg-white shadow-2xl rounded-3xl px-4 py-8 md:p-10 lg:p-12">
 
+        <!-- Capture Thought Section -->
         <div id="captureThoughtContainer"
              class="lg:w-2/5 order-1 lg:order-2 lg:sticky lg:top-8 lg:self-start capture-thought-mobile-hidden w-full">
-            <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-200 mb-8">
-                <h2 class="text-2xl font-semibold text-gray-700 mb-6">Capture Your Thought</h2>
+            <div class="bg-white p-8 rounded-2xl shadow-xl border border-gray-100 mb-8">
+                <h2 class="text-3xl font-semibold text-gray-800 mb-6 text-center">Capture Your Thought</h2>
                 <textarea id="thoughtInput"
-                          class="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-200 resize-y min-h-[120px] text-lg"
+                          class="w-full p-4 border border-gray-200 rounded-lg input-focus-style transition duration-200 resize-y min-h-[140px] text-lg placeholder-gray-400"
                           placeholder="Write your thought here... (e.g., 'I'm worried about the presentation tomorrow', 'Idea for a new project', 'Need to buy groceries')"></textarea>
 
                 <div class="mt-6 flex flex-col items-stretch gap-4">
                     <select id="tagSelect"
-                            class="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-700 focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-200 text-lg">
+                            class="w-full p-3 border border-gray-200 rounded-lg bg-white text-gray-700 input-focus-style transition duration-200 text-lg">
                         <option value="">Select a Tag</option>
-                        <option value="Anxiety">Anxiety</option>
-                        <option value="Guilt/Regret">Guilt/Regret</option>
-                        <option value="Illogical/Irrelevant">Illogical/Irrelevant</option>
+                        <option value="Important Task">Important Task</option>
                         <option value="Ideas">Ideas</option>
                         <option value="Plan">Plan</option>
                         <option value="Motivation">Motivation</option>
-                        <option value="Important Task">Important Task</option>
                         <option value="Less Priority Tasks">Less Priority Tasks</option>
+                        <option value="Anxiety">Anxiety</option>
+                        <option value="Guilt/Regret">Guilt/Regret</option>
+                        <option value="Illogical/Irrelevant">Illogical/Irrelevant</option>
                     </select>
                     <button id="saveThoughtBtn"
-                            class="w-full px-6 py-3 bg-green-600 text-white font-semibold rounded-xl shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200 text-lg">
+                            class="mt-4 w-full px-6 py-3 text-white font-semibold rounded-xl btn-primary text-lg">
                         Save Thought
                     </button>
                 </div>
             </div>
         </div>
 
-        <div class="lg:w-3/5 bg-gray-50 py-8 px-0 rounded-xl shadow-lg flex flex-col gap-6 border border-gray-200 order-2 lg:order-1 w-full lg:p-8">
+        <!-- Focus Scale Section -->
+        <div class="lg:w-3/5 bg-gray-50 p-8 rounded-2xl shadow-xl flex flex-col gap-6 border border-gray-100 order-2 lg:order-1 w-full">
             <h2 class="text-3xl font-semibold text-gray-800 mb-4 text-center">Focus Scale</h2>
 
-            <div class="bg-green-50 border-l-4 border-green-500 p-5 rounded-lg shadow-sm">
-                <h3 class="text-xl font-bold text-green-700 mb-2">High Focus</h3>
-                <p class="text-sm text-green-600 mb-2">Thoughts that need your immediate attention.</p>
+            <!-- High Focus Section - UPDATED COLORS AND FONT SIZES -->
+            <div class="high-focus-card border-l-4 p-6 rounded-xl shadow-md">
+                <h3 class="text-2xl font-bold text-[#1e8449] mb-2">High Focus</h3>
+                <p class="text-base text-[#229954] mb-2">Thoughts that need your immediate attention.</p>
                 <div class="focus-list-container mt-4">
-                    <ul id="highFocusList" class="list-none pl-0 space-y-3 text-green-800">
-                        </ul>
+                    <ul id="highFocusList" class="list-none pl-0 space-y-4 text-gray-800">
+                        <!-- Thoughts will be rendered here -->
+                    </ul>
                 </div>
             </div>
 
-            <div class="bg-orange-50 border-l-4 border-orange-500 p-5 rounded-lg shadow-sm">
-                <h3 class="text-xl font-bold text-orange-700 mb-2">Low Focus</h3>
-                <p class="text-sm text-orange-600 mb-2">Thoughts to consider, but not urgent.</p>
+            <!-- Low Focus Section - UPDATED COLORS AND FONT SIZES -->
+            <div class="low-focus-card border-l-4 p-6 rounded-xl shadow-md">
+                <h3 class="text-2xl font-bold text-[#e65100] mb-2">Low Focus</h3>
+                <p class="text-base text-[#f57c00] mb-2">Thoughts to consider, but not urgent.</p>
                 <div class="focus-list-container mt-4">
-                    <ul id="lowFocusList" class="list-none pl-0 space-y-3 text-orange-800">
-                        </ul>
+                    <ul id="lowFocusList" class="list-none pl-0 space-y-4 text-gray-800">
+                        <!-- Thoughts will be rendered here -->
+                    </ul>
                 </div>
             </div>
 
-            <div class="bg-red-50 border-l-4 border-red-500 p-5 rounded-lg shadow-sm">
-                <h3 class="text-xl font-bold text-red-700 mb-2">Ignore</h3>
-                <p class="text-sm text-red-600 mb-2">Thoughts to acknowledge, then let go.</p>
+            <!-- Ignore Section - UPDATED COLORS AND FONT SIZES -->
+            <div class="ignore-card border-l-4 p-6 rounded-xl shadow-md">
+                <h3 class="text-2xl font-bold text-[#c0392b] mb-2">Ignore</h3>
+                <p class="text-base text-[#e74c3c] mb-2">Thoughts to acknowledge, then let go.</p>
                 <div class="focus-list-container mt-4">
-                    <ul id="ignoreList" class="list-none pl-0 space-y-3 text-red-800">
-                        </ul>
+                    <ul id="ignoreList" class="list-none pl-0 space-y-4 text-gray-800">
+                        <!-- Thoughts will be rendered here -->
+                    </ul>
                 </div>
             </div>
         </div>
@@ -297,11 +351,11 @@
             const createFocusScaleListItem = (thought) => {
                 const li = document.createElement('li');
                 // Updated classes for professional, minimalistic look
-                li.className = 'focus-list-item flex flex-col p-3 px-5 bg-white rounded-lg shadow-sm border border-gray-100';
+                li.className = 'focus-list-item flex flex-col p-4 bg-white rounded-xl shadow-sm border border-gray-100';
                 li.innerHTML = `
                     <div class="flex justify-between items-center w-full mb-2">
                         <span class="text-sm font-medium text-gray-500 tracking-wide">${thought.tag}</span>
-                        <button data-id="${thought.id}" class="delete-focus-btn text-gray-400 hover:text-red-500 text-2xl transition-colors duration-200" title="Delete thought">
+                        <button data-id="${thought.id}" class="delete-focus-btn text-gray-400 hover:text-pink-500 text-2xl transition-colors duration-200" title="Delete thought">
                             &times;
                         </button>
                     </div>
@@ -340,7 +394,33 @@
         const saveThoughtBtn = document.getElementById('saveThoughtBtn');
         const thoughtInput = document.getElementById('thoughtInput');
         const tagSelect = document.getElementById('tagSelect');
-        const topHeadingSection = document.querySelector('body > div:first-child'); // Reference to the top heading, assuming it's the first div in body
+
+        // Function to show a custom modal message instead of alert
+        function showMessageModal(message) {
+            // Create modal elements
+            const modalOverlay = document.createElement('div');
+            modalOverlay.className = 'fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-[9999]';
+
+            const modalContent = document.createElement('div');
+            modalContent.className = 'bg-white p-8 rounded-lg shadow-xl max-w-sm w-full text-center';
+
+            const messageText = document.createElement('p');
+            messageText.className = 'text-lg font-semibold text-gray-800 mb-6';
+            messageText.textContent = message;
+
+            const closeButton = document.createElement('button');
+            closeButton.className = 'px-6 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 transition duration-200';
+            closeButton.textContent = 'OK';
+            closeButton.onclick = () => {
+                document.body.removeChild(modalOverlay);
+            };
+
+            modalContent.appendChild(messageText);
+            modalContent.appendChild(closeButton);
+            modalOverlay.appendChild(modalContent);
+            document.body.appendChild(modalOverlay);
+        }
+
 
         // Function to toggle the capture thought section visibility (accordion behavior)
         function toggleCaptureThoughtSection() {
@@ -367,11 +447,11 @@
             const selectedTag = tagSelect.value;
 
             if (thoughtText === '') {
-                alert('Please enter your thought.');
+                showMessageModal('Please enter your thought.');
                 return;
             }
             if (selectedTag === '') {
-                alert('Please select a tag for your thought.');
+                showMessageModal('Please select a tag for your thought.');
                 return;
             }
 
@@ -390,7 +470,7 @@
 
             } catch (error) {
                 console.error('Error saving thought:', error);
-                alert('Failed to save thought. Please try again.');
+                showMessageModal('Failed to save thought. Please try again.');
             }
         });
 
@@ -410,18 +490,20 @@
 
             } catch (error) {
                 console.error('Failed to initialize app:', error);
-                // Optionally display a user-friendly error message
+                showMessageModal('Failed to load the application. Please try refreshing.');
             }
         };
 
-        // Adjust visibility on window resize (e.g., rotating tablet or virtual keyboard appearing)
+        // Adjust visibility on window resize (e.g., rotating tablet)
         window.addEventListener('resize', () => {
-            if (window.innerWidth >= 1024) { // Desktop view
+            if (window.innerWidth < 1024) { // Mobile view
+                captureThoughtContainer.classList.add('capture-thought-mobile-hidden'); // Collapsed by default
+            } else { // Desktop view
                 captureThoughtContainer.classList.remove('capture-thought-mobile-hidden'); // Always visible
             }
-            // Mobile view (innerWidth < 1024) now doesn't force captureThoughtContainer hidden on resize,
-            // and heading visibility is handled purely by CSS media queries.
         });
+
+        // No need for scroll event listener for sticky behavior, as 'position: sticky; top: 0;' handles it automatically.
     </script>
 </body>
 </html>
